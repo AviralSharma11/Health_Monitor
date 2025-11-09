@@ -1,0 +1,130 @@
+.dashboard {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 2rem;
+  font-family: 'Inter', sans-serif;
+  min-width: 90vw;
+}
+
+.dashboard-title {
+  text-align: center;
+  font-size: 2rem;
+  color: #2563eb;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.sensor-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  border-left: 6px solid;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+.sensor-card.red { border-color: #ef4444; }
+.sensor-card.blue { border-color: #3b82f6; }
+.sensor-card.orange { border-color: #f97316; }
+.sensor-card.green { border-color: #10b981; }
+
+.sensor-card h3 {
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.sensor-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.sensor-status {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.chart-card h3 {
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.analysis {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+}
+
+.analysis h2 {
+  color: #374151;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.analysis-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-between;
+}
+
+.analysis-left {
+  flex: 1;
+  min-width: 250px;
+}
+
+.analysis-right {
+  background: #eff6ff;
+  padding: 1rem;
+  border-radius: 12px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.analysis-right h3 {
+  color: #1d4ed8;
+  margin-bottom: 0.5rem;
+}
+
+.analysis-right ul {
+  color: #374151;
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.risk.low { color: #16a34a; }
+.risk.medium { color: #facc15; }
+.risk.high { color: #dc2626; }
+
+.recommendation { margin-top: 0.5rem; }
+
+.cloud-status {
+  text-align: center;
+  color: #6b7280;
+  margin-top: 2rem;
+}
+
+p{
+  color: black;
+}
