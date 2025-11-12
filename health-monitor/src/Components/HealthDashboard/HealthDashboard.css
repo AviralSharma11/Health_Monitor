@@ -96,6 +96,7 @@
 
 .action-btn:active {
   transform: translateY(0);
+  background: #0284c7;
 }
 
 .user-inputs {
