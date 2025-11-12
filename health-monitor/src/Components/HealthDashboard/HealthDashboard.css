@@ -128,3 +128,83 @@
 p{
   color: black;
 }
+
+h3{
+  color: black;
+}
+
+.user-inputs {
+  background: #f9fafc;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  color: black;
+}
+
+.input-group input {
+  width: 100px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+
+.simulate-btn {
+  background: linear-gradient(135deg, #0078ff, #00d4ff);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 120, 255, 0.3);
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.simulate-btn:hover {
+  background: linear-gradient(135deg, #005ce6, #00b8e6);
+  box-shadow: 0 6px 14px rgba(0, 120, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.simulate-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(0, 120, 255, 0.3);
+}
+
+/* If you have more button types later (like 'Stop', 'Refresh', etc.) */
+.action-btn {
+  background: #f0f4f8;
+  border: 2px solid #0078ff;
+  color: #0078ff;
+  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.action-btn:hover {
+  background: #0078ff;
+  color: white;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}

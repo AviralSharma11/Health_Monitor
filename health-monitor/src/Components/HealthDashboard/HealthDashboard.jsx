@@ -12,6 +12,22 @@ import {
 } from "chart.js";
 import rules from "../../Data/DiseaseCriteria"
 import "./HealthDashboard.css"; 
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, onValue } from "firebase/database";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4oTUU5m5I__8Sbi0n7nn5WW310WTF_zs",
+  authDomain: "health-monitoring-systm-6ride9.firebaseapp.com",
+  databaseURL: "https://health-monitoring-systm-6ride9-default-rtdb.firebaseio.com",
+  projectId: "health-monitoring-systm-6ride9",
+  storageBucket: "health-monitoring-systm-6ride9.firebasestorage.app",
+  messagingSenderId: "387293100201",
+  appId: "1:387293100201:web:382e6327bb9fad897611b8",
+  measurementId: "G-KMPPY4Q0M3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
@@ -28,39 +44,87 @@ export default function HealthDashboard() {
     matches: [] , 
   });
 
+const [monitoring, setMonitoring] = useState(false);
+const [intervalId, setIntervalId] = useState(null);
+const [collectedData, setCollectedData] = useState([]);
+
+
+  const [userInput, setUserInput] = useState({
+    height: 170,
+    weight: 68,
+  });
+
+function handleInputChange(e) {
+  const { name, value } = e.target;
+  setUserInput((prev) => ({ ...prev, [name]: value }));
+}
+
+
   const [history, setHistory] = useState({
     time: [],
     heartRate: [],
     spo2: [],
     temperature: [],
   });
+useEffect(() => {
+  // Import from your initialized Firebase setup
+  const dataRef = ref(db, "/SensorData"); 
 
-//   useEffect(() => {
-//   const fetchData = async () => {
-//     try {
-//       const res = await fetch("https://your-cloud-api/health-data"); // cloud api link
-//       const json = await res.json();
-//       const latest = json.latest;
+  // Realtime listener: runs whenever Firebase data changes
+  const unsubscribe = onValue(dataRef, (snapshot) => {
+    const firebaseData = snapshot.val();
+    if (!firebaseData) return;
 
-//       const { disease, riskLevel } = analyzeHealth(latest);
+    console.log("📡 Live Firebase Data:", firebaseData);
 
-//       setData({
-//         ...latest,
-//         disease,
-//         riskLevel,
-//         healthStatus: riskLevel === "High" ? "Critical" : riskLevel === "Medium" ? "Warning" : "Normal",
-//       });
+    // In case your ESP32 pushes multiple readings, get the latest
+    // Example: if firebaseData = { "1": {...}, "2": {...} }
+    const latest =
+      typeof firebaseData === "object" && !firebaseData.heartRate
+        ? Object.values(firebaseData).pop()
+        : firebaseData;
 
-//       setHistory(json.history);
-//     } catch (err) {
-//       console.error("Error fetching data:", err);
-//     }
-//   };
+    // Analyze data with your rule system
+    const latestWithUser = {
+      ...latest,
+      height: parseFloat(userInput.height),
+      weight: parseFloat(userInput.weight),
+    };
+    const { disease, riskLevel, description, bmi, matches, doctorAdvice } =
+      analyzeHealth(latestWithUser);
 
-//   fetchData();
-//   const interval = setInterval(fetchData, 5000);
-//   return () => clearInterval(interval);
-// }, []);
+    // Update dashboard values
+   setData({
+    heartRate: latest.bpm ?? 0,
+    spo2: latest.spo2 ?? 0,
+    temperature: latest.temperature ?? 0, // only if you later add it
+    soundLevel: latest.heartSound ?? 0,
+    disease,
+    description,
+    riskLevel,
+    doctorAdvice,
+    matches,
+    healthStatus:
+      riskLevel === "High"
+        ? "Critical"
+        : riskLevel === "Medium"
+        ? "Warning"
+        : "Normal",
+  });
+
+    // Append to history for charts
+    setHistory((prev) => ({
+      time: [...prev.time.slice(-19), new Date().toLocaleTimeString()],
+      heartRate: [...prev.heartRate.slice(-19), latest.heartRate],
+      spo2: [...prev.spo2.slice(-19), latest.spo2],
+      temperature: [...prev.temperature.slice(-19), latest.temperature],
+    }));
+  });
+
+  // Cleanup listener on unmount
+  return () => unsubscribe();
+}, []);
+
 
 function evaluateRule(value, ruleString) {
   if (typeof ruleString !== "string") return false;
@@ -201,8 +265,8 @@ function simulateData() {
     soundLevel: Math.floor(Math.random() * (90 - 30) + 30),   // 30–90 dB
     lungSound: Math.random() > 0.7 ? "abnormal" : "normal",   // Random irregularity
     age: 25,
-    height: 170,
-    weight: 68,
+    height: parseFloat(userInput.height),
+    weight: parseFloat(userInput.weight)
   };
 
   // Analyze health with your rule system
@@ -243,13 +307,138 @@ function simulateData() {
 }
 
 
+function startMonitoring() {
+  if (monitoring) return; // Already running
+
+  setMonitoring(true);
+  setCollectedData([]); // reset old data
+
+  const id = setInterval(() => {
+    const dataRef = ref(db, "/SensorData");
+
+    onValue(dataRef, (snapshot) => {
+      const firebaseData = snapshot.val();
+      if (!firebaseData) return;
+
+      const latest =
+        typeof firebaseData === "object" && !firebaseData.heartRate
+          ? Object.values(firebaseData).pop()
+          : firebaseData;
+
+      // Append latest reading to state safely
+      setCollectedData((prevData) => {
+        const updated = [...prevData.slice(-449), latest]; // keep last 450 readings (15 min @2s)
+
+        // Compute means
+        const meanHeartRate = prevMean("bpm", updated) ?? 0;
+        const meanSpO2 = prevMean("spo2", updated) ?? 0;
+        const meanTemp = prevMean("temperature", updated) ?? 0;
+
+        const meanData = {
+          heartRate: meanHeartRate,
+          spo2: meanSpO2,
+          temperature: meanTemp,
+          lungSound: latest.lungSound,
+          height: parseFloat(userInput.height),
+          weight: parseFloat(userInput.weight),
+        };
+
+        const { disease, riskLevel, description, bmi, matches, doctorAdvice } =
+          analyzeHealth(meanData);
+
+        // Update dashboard data
+        setData({
+          heartRate: meanHeartRate.toFixed(1),
+          spo2: meanSpO2.toFixed(1),
+          temperature: meanTemp.toFixed(1),
+          soundLevel: latest.heartSound ?? 0,
+          disease,
+          description,
+          riskLevel,
+          doctorAdvice,
+          matches,
+          healthStatus:
+            riskLevel === "High"
+              ? "Critical"
+              : riskLevel === "Medium"
+              ? "Warning"
+              : "Normal",
+        });
+
+        // Update history for charts
+        setHistory((prev) => ({
+          time: [...prev.time.slice(-19), new Date().toLocaleTimeString()],
+          heartRate: [...prev.heartRate.slice(-19), meanHeartRate],
+          spo2: [...prev.spo2.slice(-19), meanSpO2],
+          temperature: [...prev.temperature.slice(-19), meanTemp],
+        }));
+
+        return updated;
+      });
+    });
+  }, 2000);
+
+  setIntervalId(id);
+
+  // Auto-stop after 15 minutes (900,000 ms)
+  setTimeout(() => stopMonitoring(), 900000);
+}
+
+
+function prevMean(key, arr) {
+  if (!arr || arr.length === 0) return 0;
+  const valid = arr.map((x) => parseFloat(x[key])).filter((v) => !isNaN(v));
+  if (valid.length === 0) return 0;
+  return valid.reduce((a, b) => a + b, 0) / valid.length;
+}
+
+
+function stopMonitoring() {
+  if (intervalId) {
+    clearInterval(intervalId);
+    setIntervalId(null);
+    setMonitoring(false);
+    console.log("⏹️ Monitoring stopped.");
+  }
+}
+
 
   return (
     <div className="dashboard">
       <h1 className="dashboard-title">Smart Health Monitor Dashboard</h1>
-        <button className="simulate-btn" onClick={simulateData}>
-          Simulate Random Data
-        </button>
+
+      <div className="button-group">
+        <button className="simulate-btn" onClick={simulateData}>Simulate Random Data</button>
+        <button className="action-btn" onClick={startMonitoring}>Start Monitoring</button>
+        <button className="action-btn" onClick={stopMonitoring}>Stop</button>
+      </div>
+
+
+        <div className="user-inputs">
+  <h3>Enter Your Details</h3>
+  <div className="input-group">
+    <label>Height (cm):</label>
+    <input
+      type="number"
+      name="height"
+      value={userInput.height}
+      onChange={handleInputChange}
+      min="100"
+      max="250"
+    />
+  </div>
+  <div className="input-group">
+    <label>Weight (kg):</label>
+    <input
+      type="number"
+      name="weight"
+      value={userInput.weight}
+      onChange={handleInputChange}
+      min="30"
+      max="200"
+    />
+  </div>
+</div>
 
       {/* Sensor Data */}
       <div className="sensor-grid">
