@@ -23,7 +23,8 @@ import { getDatabase, ref, onValue, off } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyA4oTUU5m5I__8Sbi0n7nn5WW310WTF_zs",
   authDomain: "health-monitoring-systm-6ride9.firebaseapp.com",
-  databaseURL: "https://health-monitoring-systm-6ride9-default-rtdb.firebaseio.com",
+  databaseURL:
+    "https://health-monitoring-systm-6ride9-default-rtdb.firebaseio.com",
   projectId: "health-monitoring-systm-6ride9",
   storageBucket: "health-monitoring-systm-6ride9.firebasestorage.app",
   messagingSenderId: "387293100201",
@@ -33,7 +34,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
+ChartJS.register(
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend
+);
 
 // --------------------------------------------------
 // MAIN DASHBOARD COMPONENT
@@ -46,13 +54,15 @@ export default function HealthDashboard() {
     lungSound: 0,
     disease: "None detected",
     riskLevel: "Low",
-    doctorAdvice: { advice: "Minor irregularities detected. Monitor your health regularly.", urgency: "None" },
+    doctorAdvice: {
+      advice: "Minor irregularities detected. Monitor your health regularly.",
+      urgency: "None",
+    },
     matches: [],
   });
 
-const [analysisReady, setAnalysisReady] = useState(false);
-const [timerStarted, setTimerStarted] = useState(false);
-
+  const [analysisReady, setAnalysisReady] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false);
 
   const [history, setHistory] = useState({
     time: [],
@@ -91,13 +101,12 @@ const [timerStarted, setTimerStarted] = useState(false);
         weight: parseFloat(userInput.weight),
       };
 
-
       if (!timerStarted) {
         setTimerStarted(true);
         setTimeout(() => {
           setAnalysisReady(true);
-        }, 60000); // 1 minute
-}
+        }, 120000); // 2 minute
+      }
 
       const analysis = analyzeHealth(latest);
 
@@ -133,9 +142,11 @@ const [timerStarted, setTimerStarted] = useState(false);
       const [min, max] = ruleString.split("-").map(Number);
       return value >= min && value <= max;
     }
-    if (ruleString.startsWith(">=")) return value >= Number(ruleString.slice(2));
+    if (ruleString.startsWith(">="))
+      return value >= Number(ruleString.slice(2));
     if (ruleString.startsWith(">")) return value > Number(ruleString.slice(1));
-    if (ruleString.startsWith("<=")) return value <= Number(ruleString.slice(2));
+    if (ruleString.startsWith("<="))
+      return value <= Number(ruleString.slice(2));
     if (ruleString.startsWith("<")) return value < Number(ruleString.slice(1));
 
     const num = Number(ruleString);
@@ -153,7 +164,10 @@ const [timerStarted, setTimerStarted] = useState(false);
     const top = matches[0];
 
     if (top.disease.toLowerCase().includes("healthy")) {
-      return { advice: "You are healthy. Keep maintaining good habits!", urgency: "None" };
+      return {
+        advice: "You are healthy. Keep maintaining good habits!",
+        urgency: "None",
+      };
     }
 
     if (top.riskLevel === "High" || top.matchPercent >= 70) {
@@ -189,7 +203,7 @@ const [timerStarted, setTimerStarted] = useState(false);
   function analyzeHealth(d) {
     const { bpm, spo2, temp, heartSound, height, weight } = d;
 
-    const bmi = weight && height ? weight / ((height / 100) ** 2) : null;
+    const bmi = weight && height ? weight / (height / 100) ** 2 : null;
     const abnormalParams = {};
     const matches = [];
 
@@ -200,13 +214,14 @@ const [timerStarted, setTimerStarted] = useState(false);
     if (bmi && (bmi < 18.5 || bmi > 25)) abnormalParams.bmi = bmi;
     if (heartSound !== 0) abnormalParams.heartSound = heartSound;
 
-    let lungSoundLevel = heartSound;  
+    let lungSoundLevel = heartSound;
 
     // --- Standardized Lung Sound Classification ---
     let lungStatus = "Normal";
 
     if (lungSoundLevel > 70) lungStatus = "Severe crackles/wheezing (High)";
-    else if (lungSoundLevel > 40) lungStatus = "Abnormal breath sounds (Medium)";
+    else if (lungSoundLevel > 40)
+      lungStatus = "Abnormal breath sounds (Medium)";
     else if (lungSoundLevel > 10) lungStatus = "Mild irregularities (Low)";
     else lungStatus = "Clear / Normal";
 
@@ -259,7 +274,6 @@ const [timerStarted, setTimerStarted] = useState(false);
       doctorAdvice,
       lungStatus,
       lungSound: lungSoundLevel,
-
     };
   }
 
@@ -279,54 +293,47 @@ const [timerStarted, setTimerStarted] = useState(false);
     ],
   });
 
-
   function simulateData() {
-  const randomData = {
-    heartRate: Math.floor(Math.random() * (120 - 60) + 60),  // 60–120 BPM
-    spo2: Math.floor(Math.random() * (100 - 85) + 85),       // 85–100%
-    temperature: (Math.random() * (39 - 36) + 36).toFixed(1), // 36–39°C
-    lungSound: Math.floor(Math.random() * (90 - 30) + 30),   // 30–90 dB
-    age: 25,
-    height: parseFloat(userInput.height),
-    weight: parseFloat(userInput.weight)
-  };
+    const randomData = {
+      heartRate: Math.floor(Math.random() * (120 - 60) + 60), // 60–120 BPM
+      spo2: Math.floor(Math.random() * (100 - 85) + 85), // 85–100%
+      temperature: (Math.random() * (39 - 36) + 36).toFixed(1), // 36–39°C
+      lungSound: Math.floor(Math.random() * (90 - 30) + 30), // 30–90 dB
+      age: 25,
+      height: parseFloat(userInput.height),
+      weight: parseFloat(userInput.weight),
+    };
 
     // Analyze health with your rule system
-  const {
-    disease,
-    riskLevel,
-    description,
-    bmi,
-    matches,
-    doctorAdvice,
-  } = analyzeHealth(randomData);
+    const { disease, riskLevel, description, bmi, matches, doctorAdvice } =
+      analyzeHealth(randomData);
 
-  //Include matches in setData
-  setData({
-    ...randomData,
-    disease,
-    description,
-    riskLevel,
-    doctorAdvice,
-    matches, 
-    healthStatus:
-      riskLevel === "High"
-        ? "Critical"
-        : riskLevel === "Medium"
-        ? "Warning"
-        : "Normal",
-  });
+    //Include matches in setData
+    setData({
+      ...randomData,
+      disease,
+      description,
+      riskLevel,
+      doctorAdvice,
+      matches,
+      healthStatus:
+        riskLevel === "High"
+          ? "Critical"
+          : riskLevel === "Medium"
+          ? "Warning"
+          : "Normal",
+    });
 
-  // Update chart history
-  setHistory((prev) => ({
-    time: [...prev.time, new Date().toLocaleTimeString()],
-    heartRate: [...prev.heartRate, randomData.heartRate],
-    spo2: [...prev.spo2, randomData.spo2],
-    temperature: [...prev.temperature, randomData.temperature],
-  }));
+    // Update chart history
+    setHistory((prev) => ({
+      time: [...prev.time, new Date().toLocaleTimeString()],
+      heartRate: [...prev.heartRate, randomData.heartRate],
+      spo2: [...prev.spo2, randomData.spo2],
+      temperature: [...prev.temperature, randomData.temperature],
+    }));
 
-  console.log("Simulated Data:", randomData);
-}
+    console.log("Simulated Data:", randomData);
+  }
 
   // --------------------------------------------------
   // JSX RETURN (UI)
@@ -334,75 +341,117 @@ const [timerStarted, setTimerStarted] = useState(false);
   return (
     <div className="dashboard">
       <h1 className="dashboard-title">Smart Health Monitor Dashboard</h1>
-            <div className="button-group">
-            <button className="simulate-btn" onClick={simulateData}>Simulate Random Data</button>
-          </div>
+      <div className="button-group">
+        <button className="simulate-btn" onClick={simulateData}>
+          Simulate Random Data
+        </button>
+      </div>
       {/* User Inputs */}
       <div className="user-inputs">
         <h3>Enter Your Details</h3>
         <div className="input-group">
           <label>Height (cm):</label>
-          <input type="number" name="height" value={userInput.height} onChange={handleInputChange} />
+          <input
+            type="number"
+            name="height"
+            value={userInput.height}
+            onChange={handleInputChange}
+          />
         </div>
 
         <div className="input-group">
           <label>Weight (kg):</label>
-          <input type="number" name="weight" value={userInput.weight} onChange={handleInputChange} />
+          <input
+            type="number"
+            name="weight"
+            value={userInput.weight}
+            onChange={handleInputChange}
+          />
         </div>
       </div>
 
       {/* Sensor Cards */}
       <div className="sensor-grid">
-        <SensorCard title="Heart Rate" value={`${data.heartRate} BPM`} color="red" />
+        <SensorCard
+          title="Heart Rate"
+          value={`${data.heartRate} BPM`}
+          color="red"
+        />
         <SensorCard title="SpO₂" value={`${data.spo2} %`} color="blue" />
-        <SensorCard title="Temperature" value={`${data.temperature} °C`} color="orange" />
-        <SensorCard title="Sound Level" value={`${data.lungSound} dB`} color="green" />
+        <SensorCard
+          title="Temperature"
+          value={`${data.temperature} °C`}
+          color="orange"
+        />
+        <SensorCard
+          title="Sound Level"
+          value={`${data.lungSound} dB`}
+          color="green"
+        />
       </div>
 
       {/* Charts */}
       <div className="chart-grid">
-        <ChartCard title="Heart Rate Over Time" data={chartData("Heart Rate", history.heartRate)} />
-        <ChartCard title="SpO₂ Over Time" data={chartData("SpO₂", history.spo2)} />
-        <ChartCard title="Temperature Over Time" data={chartData("Temperature", history.temperature)} />
+        <ChartCard
+          title="Heart Rate Over Time"
+          data={chartData("Heart Rate", history.heartRate)}
+        />
+        <ChartCard
+          title="SpO₂ Over Time"
+          data={chartData("SpO₂", history.spo2)}
+        />
+        <ChartCard
+          title="Temperature Over Time"
+          data={chartData("Temperature", history.temperature)}
+        />
       </div>
 
       {/* AI Analysis */}
-      <motion.div className="analysis" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div
+        className="analysis"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
         <h2>AI Health Analysis</h2>
 
         <div className="analysis-content">
+          <div className="analysis-right">
+            <h3>Possible Conditions:</h3>
 
-         <div className="analysis-right">
-  <h3>Possible Conditions:</h3>
+            {!analysisReady ? (
+              <p>
+                <em>Analyzing your health data… Please wait 2 minutes.</em>
+              </p>
+            ) : data.matches.length ? (
+              <ul>
+                {data.matches.map((m, i) => (
+                  <li key={i}>
+                    <strong>{m.disease}</strong> — {m.matchPercent}% (
+                    {m.riskLevel})
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Healthy</p>
+            )}
+          </div>
 
-  {!analysisReady ? (
-    <p><em>Analyzing your health data… Please wait 1 minute.</em></p>
-  ) : data.matches.length ? (
-    <ul>
-      {data.matches.map((m, i) => (
-        <li key={i}>
-          <strong>{m.disease}</strong> — {m.matchPercent}% ({m.riskLevel})
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p>Healthy</p>
-  )}
-</div>
+          <div className="analysis-right">
+            <h3>Doctor Recommendation:</h3>
 
-<div className="analysis-right">
-  <h3>Doctor Recommendation:</h3>
-
-  {!analysisReady ? (
-    <p><em>Generating doctor recommendation…</em></p>
-  ) : (
-    <>
-      <p><strong>Urgency:</strong> {data.doctorAdvice.urgency}</p>
-      <p>{data.doctorAdvice.advice}</p>
-    </>
-  )}
-</div>
-
+            {!analysisReady ? (
+              <p>
+                <em>Generating doctor recommendation…</em>
+              </p>
+            ) : (
+              <>
+                <p>
+                  <strong>Urgency:</strong> {data.doctorAdvice.urgency}
+                </p>
+                <p>{data.doctorAdvice.advice}</p>
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>
